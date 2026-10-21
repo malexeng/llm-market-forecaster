@@ -1,0 +1,32 @@
+# ================================================================
+#  MARKET FORECASTER — Market Forecasting Agent
+#  No trading. No API keys. Pure analysis.
+# ================================================================
+
+# --- PAIRS TO WATCH ---
+symbols:
+  - "BTC-USD"
+  - "ETH-USD"
+  - "SOL-USD"
+
+# --- SCHEDULE ---
+# Run analysis once per day at this hour (24h format)
+analysis_hour: 8          # 8am daily
+candles_lookback: 100     # How many candles to analyze
+
+# --- LLM ---
+ollama_host: "http://localhost:11434"
+# Leave model blank = auto-detect best model for your GPU
+ollama_model: "qwen2.5:14b"          # e.g. "qwen2.5:14b" or leave blank
+
+# --- DASHBOARD ---
+host: "0.0.0.0"
+port: 5050
+
+# --- DATA ---
+# Primary data source — public APIs, no auth needed
+data_source: "kraken"     # kraken | coinbase | coingecko
+
+# --- REPORT ---
+save_reports: true
+reports_dir: "reports"

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Market Forecaster</title>
+<style>
+:root{--bg:#07070f;--card:#0e0e1c;--bord:#191930;--acc:#00d4ff;--grn:#00ff99;
+--red:#ff3355;--yel:#ffd700;--pur:#c084fc;--txt:#dde0f0;--mut:#404060;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--txt);font-family:'Courier New',monospace;font-size:13px;}
+header{background:var(--card);border-bottom:1px solid var(--bord);padding:12px 22px;
+  display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:99;}
+.logo{font-size:18px;font-weight:900;letter-spacing:3px;}
+.logo .v{color:var(--pur);}.logo .a{color:var(--acc);}
+.hright{display:flex;align-items:center;gap:14px;}
+.llm-pill{display:flex;align-items:center;gap:5px;font-size:11px;}
+.dot{width:7px;height:7px;border-radius:50%;}
+.dot-on{background:var(--grn);animation:pulse 2s infinite;}
+.dot-off{background:var(--red);}
+.dot-mut{background:var(--mut);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.uptime{color:var(--mut);font-size:11px;}
+
+.ctrl{background:var(--card);border-bottom:1px solid var(--bord);
+  padding:10px 22px;display:flex;align-items:center;gap:10px;}
+.btn{padding:8px 20px;border:none;border-radius:5px;cursor:pointer;
+  font-family:'Courier New',monospace;font-weight:bold;font-size:12px;
+  letter-spacing:1px;transition:filter .15s;}
+.btn:hover{filter:brightness(1.2);}
+.btn-run{background:var(--grn);color:#000;}
+.btn-now{background:var(--acc);color:#000;}
+.status-txt{color:var(--mut);font-size:11px;}
+
+.summary-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:8px;padding:12px 22px;}
+.scard{background:var(--card);border:1px solid var(--bord);border-radius:7px;padding:12px;}
+.scard-lbl{color:var(--mut);font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.scard-val{font-size:20px;font-weight:bold;color:var(--acc);}
+.g{color:var(--grn)!important;}.r{color:var(--red)!important;}.y{color:var(--yel)!important;}
+
+.main{display:grid;grid-template-columns:1fr 420px;gap:10px;padding:10px 22px 22px;}
+@media(max-width:900px){.main{grid-template-columns:1fr;}}
+.left{display:flex;flex-direction:column;gap:10px;}
+.right{display:flex;flex-direction:column;gap:10px;}
+
+.panel{background:var(--card);border:1px solid var(--bord);border-radius:7px;overflow:hidden;}
+.ph{padding:9px 14px;border-bottom:1px solid var(--bord);display:flex;justify-content:space-between;align-items:center;}
+.ph-title{font-weight:bold;font-size:11px;letter-spacing:1px;}
+.ph-sub{color:var(--mut);font-size:10px;}
+
+.forecast-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;padding:10px;}
+.fc{background:#0a0a18;border:1px solid var(--bord);border-radius:6px;padding:12px;}
+.fc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.fc-sym{font-weight:bold;color:var(--acc);font-size:14px;}
+.fc-price{color:var(--mut);font-size:11px;}
+.dir-bull{background:rgba(0,255,153,.1);color:var(--grn);border:1px solid rgba(0,255,153,.3);
+  padding:3px 10px;border-radius:12px;font-size:10px;font-weight:bold;}
+.dir-bear{background:rgba(255,51,85,.1);color:var(--red);border:1px solid rgba(255,51,85,.3);
+  padding:3px 10px;border-radius:12px;font-size:10px;font-weight:bold;}
+.dir-neut{background:rgba(255,215,0,.1);color:var(--yel);border:1px solid rgba(255,215,0,.3);
+  padding:3px 10px;border-radius:12px;font-size:10px;font-weight:bold;}
+.conf-bar{height:4px;background:var(--bord);border-radius:2px;margin:6px 0;}
+.conf-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--acc),var(--grn));}
+.fc-reason{color:#8888aa;font-size:10px;line-height:1.5;margin:6px 0;}
+.fc-levels{display:flex;gap:8px;font-size:10px;color:var(--mut);}
+.fc-levels span{background:rgba(255,255,255,.04);padding:2px 6px;border-radius:3px;}
+.fc-risk{font-size:9px;padding:2px 8px;border-radius:10px;margin-top:4px;display:inline-block;}
+.risk-low{background:rgba(0,255,153,.1);color:var(--grn);}
+.risk-med{background:rgba(255,215,0,.1);color:var(--yel);}
+.risk-hi {background:rgba(255,51,85,.1);color:var(--red);}
+.fc-outcome{font-size:10px;margin-top:6px;padding:3px 8px;border-radius:3px;}
+.outcome-ok{background:rgba(0,255,153,.08);color:var(--grn);}
+.outcome-ng{background:rgba(255,51,85,.08);color:var(--red);}
+.outcome-pend{color:var(--mut);}
+
+.report-entry{padding:12px 14px;border-bottom:1px solid var(--bord);}
+.report-entry:last-child{border:none;}
+.report-date{color:var(--mut);font-size:10px;margin-bottom:6px;}
+.report-text{color:#b0b0d0;font-size:11px;line-height:1.7;white-space:pre-wrap;}
+
+.acc-row{display:flex;justify-content:space-between;padding:6px 14px;
+  border-bottom:1px solid rgba(255,255,255,.03);font-size:11px;}
+.acc-row:hover{background:rgba(255,255,255,.02);}
+.acc-sym{color:var(--acc);}
+.acc-pred{color:var(--mut);}
+.acc-act{font-weight:bold;}
+.correct{color:var(--grn);}
+.wrong{color:var(--red);}
+
+footer{text-align:center;color:var(--mut);padding:12px;font-size:10px;letter-spacing:1px;}
+.empty{color:var(--mut);text-align:center;padding:20px;font-size:11px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><span class="v">MARKET</span> <span class="a">FORECASTER</span></div>
+  <div class="hright">
+    <div class="llm-pill">
+      <div class="dot dot-mut" id="llm-dot"></div>
+      <span id="llm-lbl">LLM checking...</span>
+    </div>
+    <span class="uptime" id="uptime">—</span>
+  </div>
+</header>
+
+<div class="ctrl">
+  <button class="btn btn-run"  onclick="ctrl('start_scheduler')">▶ START AUTO (Daily)</button>
+  <button class="btn btn-now"  onclick="ctrl('run_now')">⟳ ANALYZE NOW</button>
+  <span class="status-txt" id="status-txt">Idle</span>
+</div>
+
+<div class="summary-bar">
+  <div class="scard"><div class="scard-lbl">30-Day Accuracy</div><div class="scard-val y" id="acc-pct">—%</div></div>
+  <div class="scard"><div class="scard-lbl">Forecasts Made</div><div class="scard-val" id="acc-total">0</div></div>
+  <div class="scard"><div class="scard-lbl">Correct</div><div class="scard-val g" id="acc-correct">0</div></div>
+  <div class="scard"><div class="scard-lbl">Wrong</div><div class="scard-val r" id="acc-wrong">0</div></div>
+  <div class="scard"><div class="scard-lbl">Last Run</div><div class="scard-val" style="font-size:13px" id="last-run">Never</div></div>
+  <div class="scard"><div class="scard-lbl">Next Run</div><div class="scard-val" style="font-size:13px" id="next-run">—</div></div>
+</div>
+
+<div class="main">
+<div class="left">
+
+  <div class="panel">
+    <div class="ph">
+      <span class="ph-title">📊 TODAY'S FORECASTS</span>
+      <span class="ph-sub" id="fc-date">—</span>
+    </div>
+    <div class="forecast-grid" id="forecast-grid">
+      <div class="empty">No forecasts yet — click ANALYZE NOW</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ph">
+      <span class="ph-title">📋 ACCURACY LOG</span>
+      <span class="ph-sub">Last 30 days</span>
+    </div>
+    <div id="acc-log">
+      <div class="empty">No outcomes tracked yet</div>
+    </div>
+  </div>
+
+</div>
+<div class="right">
+
+  <div class="panel" style="flex:1;overflow:hidden;">
+    <div class="ph">
+      <span class="ph-title">📝 DAILY REPORTS</span>
+      <span class="ph-sub">LLM synthesis</span>
+    </div>
+    <div style="max-height:680px;overflow-y:auto;" id="reports-list">
+      <div class="empty">No reports yet</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<footer>MARKET FORECASTER v1.0 — Offline LLM — No trading — Pure market analysis</footer>
+
+<script>
+async function ctrl(action){
+  document.getElementById('status-txt').textContent = action === 'run_now' ? '⟳ Running analysis...' : '▶ Scheduler started';
+  await fetch('/api/control',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});
+}
+
+function dirBadge(d){
+  if(!d) return '<span class="dir-neut">—</span>';
+  const cls = d==='BULLISH'?'dir-bull':d==='BEARISH'?'dir-bear':'dir-neut';
+  return `<span class="${cls}">${d}</span>`;
+}
+function riskBadge(r){
+  const cls = r==='LOW'?'risk-low':r==='HIGH'?'risk-hi':'risk-med';
+  return `<span class="fc-risk ${cls}">${r||'?'} RISK</span>`;
+}
+
+async function fetchStatus(){
+  try{
+    const d=await(await fetch('/api/status')).json();
+    document.getElementById('uptime').textContent=d.uptime||'—';
+    document.getElementById('last-run').textContent=d.last_run||'Never';
+    document.getElementById('next-run').textContent=d.next_run||'—';
+    document.getElementById('status-txt').textContent=d.status_msg||'Idle';
+    const dot=document.getElementById('llm-dot');
+    const lbl=document.getElementById('llm-lbl');
+    if(d.llm_status==='online'){dot.className='dot dot-on';lbl.textContent='LLM '+d.llm_model;}
+    else{dot.className='dot dot-off';lbl.textContent='LLM OFFLINE — run: ollama serve';}
+  }catch(e){}
+}
+
+async function fetchForecasts(){
+  try{
+    const rows=await(await fetch('/api/forecasts')).json();
+    const grid=document.getElementById('forecast-grid');
+    if(!rows.length){grid.innerHTML='<div class="empty">No forecasts yet</div>';return;}
+    document.getElementById('fc-date').textContent=rows[0]?.date||'—';
+    grid.innerHTML=rows.slice(0,9).map(f=>{
+      const kl=JSON.parse(f.key_levels||'{}');
+      const correct=f.was_correct;
+      let outcomeHtml='<div class="fc-outcome outcome-pend">⏳ Outcome pending</div>';
+      if(correct===1) outcomeHtml='<div class="fc-outcome outcome-ok">✅ Forecast correct</div>';
+      if(correct===0) outcomeHtml='<div class="fc-outcome outcome-ng">❌ Forecast wrong</div>';
+      return `
+      <div class="fc">
+        <div class="fc-header">
+          <span class="fc-sym">${f.symbol}</span>
+          <span class="fc-price">$${(f.price||0).toLocaleString()}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          ${dirBadge(f.direction)}
+          <span style="color:var(--mut);font-size:10px;">${f.confidence}% confidence</span>
+        </div>
+        <div class="conf-bar"><div class="conf-fill" style="width:${f.confidence||0}%"></div></div>
+        <div class="fc-reason">${f.reasoning||'—'}</div>
+        <div class="fc-levels">
+          <span>S: $${kl.support||'?'}</span>
+          <span>R: $${kl.resistance||'?'}</span>
+          <span>Inv: $${kl.invalidation||'?'}</span>
+        </div>
+        ${riskBadge(f.risk_level)}
+        ${outcomeHtml}
+      </div>`;
+    }).join('');
+  }catch(e){}
+}
+
+async function fetchAccuracy(){
+  try{
+    const d=await(await fetch('/api/accuracy')).json();
+    document.getElementById('acc-pct').textContent=(d.accuracy||0)+'%';
+    document.getElementById('acc-total').textContent=d.total||0;
+    document.getElementById('acc-correct').textContent=d.correct||0;
+    document.getElementById('acc-wrong').textContent=d.wrong||0;
+    const log=document.getElementById('acc-log');
+    const rows=d.rows||[];
+    if(!rows.length){log.innerHTML='<div class="empty">No outcomes tracked yet</div>';return;}
+    log.innerHTML=rows.map(r=>{
+      const ok=r.was_correct===1;
+      return `<div class="acc-row">
+        <span class="acc-sym">${r.symbol}</span>
+        <span class="acc-pred">Predicted: ${r.direction}</span>
+        <span class="acc-act ${ok?'correct':'wrong'}">${r.actual_dir} ${r.pct_change>0?'+':''}${r.pct_change}%</span>
+        <span class="${ok?'correct':'wrong'}">${ok?'✅':'❌'}</span>
+        <span style="color:var(--mut);font-size:10px;">${r.date}</span>
+      </div>`;
+    }).join('');
+  }catch(e){}
+}
+
+async function fetchReports(){
+  try{
+    const rows=await(await fetch('/api/reports')).json();
+    const el=document.getElementById('reports-list');
+    if(!rows.length){el.innerHTML='<div class="empty">No reports yet</div>';return;}
+    el.innerHTML=rows.map(r=>`
+      <div class="report-entry">
+        <div class="report-date">📅 ${r.date} — ${r.model_used||'LLM'}</div>
+        <div class="report-text">${r.report}</div>
+      </div>`).join('');
+  }catch(e){}
+}
+
+setInterval(fetchStatus,2000);
+setInterval(fetchForecasts,5000);
+setInterval(fetchAccuracy,8000);
+setInterval(fetchReports,10000);
+fetchStatus();fetchForecasts();fetchAccuracy();fetchReports();
+</script>
+</body>
+</html>
